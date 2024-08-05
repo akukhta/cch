@@ -12,7 +12,7 @@ std::vector<char> cch::compression::RLECompression::compress(std::span<char> dat
         unsigned char count = 1;
         size_t j = i + 1;
 
-        while (data[i] == data[j++])
+        while (data[i] == data[j])
         {
             ++count;
 
@@ -20,11 +20,14 @@ std::vector<char> cch::compression::RLECompression::compress(std::span<char> dat
             {
                 break;
             }
+
+            ++j;
         }
 
         i = j;
 
         Utilities::addElementPerByte(count, compressedData);
+        compressedData.push_back(data[i]);
     }
 
     return compressedData;
