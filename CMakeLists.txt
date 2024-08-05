@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 23)
 add_library(cch SHARED
         include/compression/RLECompression.h
         src/compression/RLECompression.cpp
-        include/compression/CompressionInfo.h
         include/utilities/Utilities.h
 )
 
