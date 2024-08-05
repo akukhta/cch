@@ -7,6 +7,8 @@ add_library(cch SHARED
         include/compression/RLECompression.h
         src/compression/RLECompression.cpp
         include/utilities/Utilities.h
+        include/compression/LZWCompression.h
+        src/compression/LZWCompression.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/)
