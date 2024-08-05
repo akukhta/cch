@@ -7,12 +7,12 @@ std::vector<char> cch::compression::RLECompression::compress(std::span<char> dat
     std::vector<char> compressedData;
     compressedData.reserve(data.size());
 
-    for (size_t i = 0; i < data.size(); i++)
+    for (size_t i = 0; i < data.size();)
     {
         unsigned char count = 1;
         size_t j = i + 1;
 
-        while (data[i] == data[j])
+        while (j < data.size() && data[i] == data[j])
         {
             ++count;
 
@@ -24,10 +24,10 @@ std::vector<char> cch::compression::RLECompression::compress(std::span<char> dat
             ++j;
         }
 
-        i = j;
-
         Utilities::addElementPerByte(count, compressedData);
         compressedData.push_back(data[i]);
+
+        i = j;
     }
 
     return compressedData;
