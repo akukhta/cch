@@ -4,15 +4,14 @@
 
 cch::compression::LZWCompression::LZWCompression()
 {
-    initDictionary();
-    initDecompressionDictionary();
+    resetState();
 }
 
 std::vector<size_t> cch::compression::LZWCompression::compress(std::span<unsigned char> data)
 {
     std::vector<size_t> result;
     std::vector<unsigned char> currentByteSeq;
-    int code = 256;
+    int code = dictionary.size();
 
     for (auto x : data)
     {
@@ -38,11 +37,12 @@ std::vector<size_t> cch::compression::LZWCompression::compress(std::span<unsigne
 
 std::vector<unsigned char> cch::compression::LZWCompression::decompress(std::span<size_t> data)
 {
-    int code = 256;
     std::vector<unsigned char> result;
+    int code = decompressionDictionary.size();
+
     std::vector<unsigned char> currentByteSeq = decompressionDictionary[data[0]];
 
-    auto appendVector = [](auto &src, auto& dst)
+    auto appendVector = [](auto &dst, auto& src)
     {
         dst.insert(dst.end(), src.begin(), src.end());
     };
@@ -53,17 +53,19 @@ std::vector<unsigned char> cch::compression::LZWCompression::decompress(std::spa
     {
         std::vector<unsigned char> entry;
 
-        if (decompressionDictionary.find(data[i]) != decompressionDictionary.end())
+        if (auto it = decompressionDictionary.find(data[i]); it != decompressionDictionary.end())
         {
-            entry = decompressionDictionary[data[i]];
+            entry = it->second;
         }
-        else
+        else if (data[i] == code)
         {
             entry = currentByteSeq;
             entry.push_back(currentByteSeq[0]);
         }
 
         appendVector(result, entry);
+
+        currentByteSeq.push_back(entry[0]);
         decompressionDictionary[code++] = currentByteSeq;
         currentByteSeq = entry;
     }
@@ -71,13 +73,17 @@ std::vector<unsigned char> cch::compression::LZWCompression::decompress(std::spa
     return result;
 }
 
-std::unordered_map<std::vector<unsigned char>, size_t, cch::compression::ByteVectorHash> & cch::compression::LZWCompression::getDictionary()
+void cch::compression::LZWCompression::resetState()
 {
-    return dictionary;
+    initCompressionDictionary();
+    initDecompressionDictionary();
 }
 
-void cch::compression::LZWCompression::initDictionary()
+
+void cch::compression::LZWCompression::initCompressionDictionary()
 {
+    dictionary.clear();
+
     for (unsigned char i = 0; i != std::numeric_limits<unsigned char>::max(); ++i)
     {
         dictionary[std::vector<unsigned char>{i}] = i;
@@ -86,6 +92,8 @@ void cch::compression::LZWCompression::initDictionary()
 
 void cch::compression::LZWCompression::initDecompressionDictionary()
 {
+    decompressionDictionary.clear();
+
     for (unsigned char i = 0; i != std::numeric_limits<unsigned char>::max(); ++i)
     {
         decompressionDictionary[i] = {i};

@@ -30,11 +30,10 @@ namespace cch
             LZWCompression();
             std::vector<size_t> compress(std::span<unsigned char> data);
             std::vector<unsigned char> decompress(std::span<size_t> data);
-
-            std::unordered_map<std::vector<unsigned char>, size_t, ByteVectorHash>& getDictionary();
+            void resetState();
 
         private:
-            void initDictionary();
+            void initCompressionDictionary();
             void initDecompressionDictionary();
             std::unordered_map<std::vector<unsigned char>, size_t, ByteVectorHash> dictionary;
             std::unordered_map<size_t, std::vector<unsigned char>> decompressionDictionary;
