@@ -84,9 +84,9 @@ void cch::compression::LZWCompression::initCompressionDictionary()
 {
     dictionary.clear();
 
-    for (unsigned char i = 0; i <= std::numeric_limits<unsigned char>::max(); ++i)
+    for (unsigned int i = 0; i <= std::numeric_limits<unsigned char>::max(); ++i)
     {
-        dictionary[std::vector<unsigned char>{i}] = i;
+        dictionary[std::vector<unsigned char>{static_cast<unsigned char>(i)}] = i;
     }
 }
 
@@ -94,8 +94,8 @@ void cch::compression::LZWCompression::initDecompressionDictionary()
 {
     decompressionDictionary.clear();
 
-    for (unsigned char i = 0; i <= std::numeric_limits<unsigned char>::max(); ++i)
+    for (unsigned int i = 0; i <= std::numeric_limits<unsigned char>::max(); ++i)
     {
-        decompressionDictionary[i] = {i};
+        decompressionDictionary[i] = {static_cast<unsigned char>(i)};
     }
 }
