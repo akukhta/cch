@@ -24,8 +24,8 @@ std::vector<unsigned char> cch::compression::RLECompression::compress(std::span<
             ++j;
         }
 
-        Utilities::addElementPerByte(count, compressedData);
         compressedData.push_back(data[i]);
+        Utilities::addElementPerByte(count, compressedData);
 
         i = j;
     }
@@ -38,12 +38,12 @@ std::vector<unsigned char> cch::compression::RLECompression::decompress(std::spa
     std::vector<unsigned char> decompressedData;
     decompressedData.reserve(data.size());
 
-    for (size_t i = 0; i < data.size() - 1; ++i)
+    for (size_t i = 0; i < data.size() - 1; i += 2)
     {
-        unsigned char count = data[i];
-        unsigned char byte = data[i + 1];
+        unsigned char byte = data[i];
+        unsigned char count = data[i + 1];
 
-        for (size_t j = 0; j < count; ++j)
+        for (unsigned char j = 0; j < count; ++j)
         {
             decompressedData.push_back(byte);
         }
