@@ -2,9 +2,9 @@
 #include <limits>
 #include "utilities/Utilities.h"
 
-std::vector<char> cch::compression::RLECompression::compress(std::span<char> data)
+std::vector<unsigned char> cch::compression::RLECompression::compress(std::span<unsigned char> data)
 {
-    std::vector<char> compressedData;
+    std::vector<unsigned char> compressedData;
     compressedData.reserve(data.size());
 
     for (size_t i = 0; i < data.size();)
@@ -31,4 +31,23 @@ std::vector<char> cch::compression::RLECompression::compress(std::span<char> dat
     }
 
     return compressedData;
+}
+
+std::vector<unsigned char> cch::compression::RLECompression::decompress(std::span<unsigned char> data)
+{
+    std::vector<unsigned char> decompressedData;
+    decompressedData.reserve(data.size());
+
+    for (size_t i = 0; i < data.size() - 1; ++i)
+    {
+        unsigned char count = data[i];
+        unsigned char byte = data[i + 1];
+
+        for (size_t j = 0; j < count; ++j)
+        {
+            decompressedData.push_back(byte);
+        }
+    }
+
+    return decompressedData;
 }

@@ -9,7 +9,8 @@ namespace cch
         class RLECompression
         {
         public:
-            std::vector<char> compress(std::span<char> data);
+            std::vector<unsigned char> compress(std::span<unsigned char> data);
+            std::vector<unsigned char> decompress(std::span<unsigned char> data);
         };
     }
 }
