@@ -27,14 +27,15 @@ namespace cch
         class LZWCompression
         {
         public:
-            LZWCompression();
+            LZWCompression() noexcept;
             std::vector<size_t> compress(std::span<unsigned char> data);
             std::vector<unsigned char> decompress(std::span<size_t> data);
-            void resetState();
+            void resetState() noexcept;
 
         private:
-            void initCompressionDictionary();
-            void initDecompressionDictionary();
+            void initCompressionDictionary() noexcept;
+            void initDecompressionDictionary() noexcept;
+
             std::unordered_map<std::vector<unsigned char>, size_t, ByteVectorHash> dictionary;
             std::unordered_map<size_t, std::vector<unsigned char>> decompressionDictionary;
         };

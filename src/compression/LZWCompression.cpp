@@ -2,7 +2,7 @@
 #include <unordered_map>
 #include <limits>
 
-cch::compression::LZWCompression::LZWCompression()
+cch::compression::LZWCompression::LZWCompression() noexcept
 {
     resetState();
 }
@@ -73,14 +73,14 @@ std::vector<unsigned char> cch::compression::LZWCompression::decompress(std::spa
     return result;
 }
 
-void cch::compression::LZWCompression::resetState()
+void cch::compression::LZWCompression::resetState() noexcept
 {
     initCompressionDictionary();
     initDecompressionDictionary();
 }
 
 
-void cch::compression::LZWCompression::initCompressionDictionary()
+void cch::compression::LZWCompression::initCompressionDictionary() noexcept
 {
     dictionary.clear();
 
@@ -90,7 +90,7 @@ void cch::compression::LZWCompression::initCompressionDictionary()
     }
 }
 
-void cch::compression::LZWCompression::initDecompressionDictionary()
+void cch::compression::LZWCompression::initDecompressionDictionary() noexcept
 {
     decompressionDictionary.clear();
 

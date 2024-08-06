@@ -1,6 +1,6 @@
 #include "compression/RLECompression.h"
-#include <limits>
 #include "utilities/Utilities.h"
+#include <limits>
 
 std::vector<unsigned char> cch::compression::RLECompression::compress(std::span<unsigned char> data)
 {
@@ -35,6 +35,11 @@ std::vector<unsigned char> cch::compression::RLECompression::compress(std::span<
 
 std::vector<unsigned char> cch::compression::RLECompression::decompress(std::span<unsigned char> data)
 {
+    if (data.size() % 2 == 1)
+    {
+        throw std::runtime_error("The data size should be dividable by 2 (byte, count)");
+    }
+
     std::vector<unsigned char> decompressedData;
     decompressedData.reserve(data.size());
 
