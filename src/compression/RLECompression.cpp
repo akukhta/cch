@@ -1,6 +1,7 @@
 #include "compression/RLECompression.h"
 #include "utilities/Utilities.h"
 #include <limits>
+#include <stdexcept>
 
 std::vector<unsigned char> cch::compression::RLECompression::compress(std::span<unsigned char> data)
 {
