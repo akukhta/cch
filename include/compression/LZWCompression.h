@@ -37,21 +37,25 @@ namespace cch
         {
         public:
             LZWCompression() noexcept;
-            std::vector<unsigned int> compress(std::span<unsigned char> data);
-            std::vector<unsigned char> decompress(std::span<unsigned int> data);
+            std::vector<std::uint32_t> compress(std::span<unsigned char> data);
+            std::vector<unsigned char> decompress(std::span<std::uint32_t> data);
             void resetState() noexcept;
 
         private:
             void initCompressionDictionary() noexcept;
             void initDecompressionDictionary() noexcept;
 
-            std::unordered_map<size_t, unsigned int, NoHash> dictionary;
+            std::unordered_map<std::uint32_t, unsigned int, NoHash> dictionary;
             std::unordered_map<unsigned int, std::deque<unsigned char>> decompressionDictionary;
 
-            void calculateHashForElement(unsigned char newElement);
+            void calculateHashForElement(unsigned char newElement, int index);
             static std::uint32_t const inline magicNumber = 0x9e3779b9;
             size_t currentHash = 0;
             size_t prevHash = 0;
+
+            std::uint32_t a = 1;
+            std::uint32_t b = 0;
+            static const inline uint32_t MOD_ADLER = 65521;
         };
     }
 }
