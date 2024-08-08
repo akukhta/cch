@@ -13,6 +13,9 @@ add_library(cch SHARED
         include/utilities/Utilities.h
         include/compression/LZWCompression.h
         src/compression/LZWCompression.cpp
+        include/utilities/fbitstream.cpp
+        include/utilities/fbitstream.h
+        include/utilities/bitstream.h
 )
 
 
