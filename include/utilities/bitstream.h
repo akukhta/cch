@@ -10,7 +10,7 @@ class bitstream;
 /// Read Only bitstream
 /// @tparam InputIterator Iterators point to the begin and to the end of a stream
 template <typename InputIterator>
-    requires (std::is_base_of_v<std::input_iterator_tag,  typename std::iterator_traits<InputIterator>::iterator_category>)
+    requires std::input_iterator<InputIterator>
 class bitstream<InputIterator, Input>
 {
 public:
@@ -73,7 +73,7 @@ template <typename InputIterator>
 bitstream(InputIterator, InputIterator) -> bitstream<InputIterator, Input>;
 
 template <typename ValueType>
-    requires std::is_trivial_v<ValueType>
+    requires (!std::input_iterator<ValueType>)
 class bitstream<ValueType, Input>
 {
 public:
@@ -102,6 +102,45 @@ public:
 
 private:
     unsigned char const* bytePtr;
+    unsigned char mask = 0x80;
+    size_t currentIndex = 0;
+};
+
+template <typename ValueType>
+bitstream(ValueType const&) -> bitstream<ValueType, Input>;
+
+template <typename ValueType>
+    requires (!std::input_iterator<ValueType>)
+class bitstream<ValueType, Output>
+{
+public:
+    bitstream(ValueType &value)
+        : bytePtr(reinterpret_cast<unsigned char*>(&value))
+    {};
+
+    void write(bool value)
+    {
+        if (mask == 0x00)
+        {
+            mask = 0x80;
+            ++currentIndex;
+
+            if (currentIndex >= sizeof(ValueType))
+            {
+                throw std::runtime_error("bitstream out of bounds");
+            }
+        }
+
+        if (value)
+        {
+            bytePtr[currentIndex] |= (0xFF & mask);
+        }
+
+        mask >>= 1;
+    }
+
+private:
+    unsigned char* bytePtr;
     unsigned char mask = 0x80;
     size_t currentIndex = 0;
 };
