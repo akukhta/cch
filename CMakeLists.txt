@@ -16,6 +16,8 @@ add_library(cch SHARED
         include/utilities/fbitstream.cpp
         include/utilities/fbitstream.h
         include/utilities/bitstream.h
+        src/compression/HuffmanCompression.cpp
+        include/compression/HuffmanCompression.h
 )
 
 

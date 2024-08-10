@@ -3,23 +3,20 @@
 #include <stdexcept>
 #include <cassert>
 
-struct Input{};
-struct Output{};
-
-template <typename, typename>
-class bitstream;
+template <typename>
+class ibitstream;
 
 /// InputIterator input bitstream
 /// @tparam InputIterator Input Iterators point to the begin and to the end of a stream
 template <typename InputIterator>
     requires std::input_iterator<InputIterator>
-class bitstream<InputIterator, Input>
+class ibitstream<InputIterator>
 {
 public:
     /// InputIterator bitstream Constructor
     /// \param first input iterator to the first element read bytes from
     /// \param last  input iterator to the last element read bytes from
-    bitstream(InputIterator first, InputIterator last) noexcept
+    ibitstream(InputIterator first, InputIterator last) noexcept
         : currentIt(first), last(last) {}
 
     /// Read single bit from a stream
@@ -65,7 +62,10 @@ public:
         return rv;
     }
 
-    friend auto& operator>>(bitstream<InputIterator, Input> &ibitstream, bool &value)
+    /// Extract one bit from the stream
+    /// @param ibitstream bitstream object
+    /// @param value return value
+    friend auto& operator>>(ibitstream<InputIterator> &ibitstream, bool &value)
     {
         value = ibitstream.read();
         return ibitstream;
@@ -86,18 +86,18 @@ private:
 
 /// type deduction guide for InputIterator input bitstream
 template <typename InputIterator>
-bitstream(InputIterator, InputIterator) -> bitstream<InputIterator, Input>;
+ibitstream(InputIterator, InputIterator) -> ibitstream<InputIterator>;
 
 /// Scalar Value input bitstream
 /// \tparam ValueType Type of the value we read bits from
 template <typename ValueType>
     requires (!std::input_iterator<ValueType>)
-class bitstream<ValueType, Input>
+class ibitstream<ValueType>
 {
 public:
     /// Scalar input bitstream
     /// \param value Reference to the value to read bits from
-    explicit bitstream(ValueType const &value) noexcept
+    explicit ibitstream(ValueType const &value) noexcept
         : bytePtr(reinterpret_cast<unsigned char const*>(&value))
     {};
 
@@ -126,7 +126,10 @@ public:
         return rv;
     }
 
-    friend auto& operator>>(bitstream<ValueType, Input> &ibitstream, bool &value)
+    /// Extract one bit from the stream
+    /// @param ibitstream bitstream object
+    /// @param value return value
+    friend auto& operator>>(ibitstream<ValueType> &ibitstream, bool &value)
     {
         value = ibitstream.read();
         return ibitstream;
@@ -142,19 +145,22 @@ private:
 
 /// Type deduction guide for Scalar input bitstream
 template <typename ValueType>
-bitstream(ValueType const&) -> bitstream<ValueType, Input>;
+ibitstream(ValueType const&) -> ibitstream<ValueType>;
+
+template <typename>
+class obitstream;
 
 /// Output iterator output bitstream
 /// \tparam OutputIterator Output Iterators point to the begin and to the end of a stream
 template <typename OutputIterator>
     requires std::output_iterator<OutputIterator, typename OutputIterator::value_type>
-class bitstream<OutputIterator, Output>
+class obitstream<OutputIterator>
 {
 public:
     /// OutputIterator bitstream Constructor
     /// \param first Output iterator to the first element write bytes to
     /// \param last  Output iterator to the last element write bytes to
-    bitstream(OutputIterator first, OutputIterator last)
+    obitstream(OutputIterator first, OutputIterator last)
         : currentIt(first), last(last)
     {
         assert(currentIt != last);
@@ -216,7 +222,10 @@ public:
         }
     }
 
-    friend auto& operator<<(bitstream<OutputIterator, Output> &obitstream, bool value)
+    /// Insert one bit to the stream
+    /// @param obitstream bitstream object
+    /// @param value bit to insert
+    friend auto& operator<<(obitstream<OutputIterator> &obitstream, bool value)
     {
         obitstream.write(value);
         return obitstream;
@@ -236,18 +245,18 @@ private:
 
 /// type deduction guide for OutputIterator bitstream
 template <typename OutputIterator>
-bitstream(OutputIterator first, OutputIterator last) -> bitstream<OutputIterator, Output>;
+obitstream(OutputIterator first, OutputIterator last) -> obitstream<OutputIterator>;
 
 /// Scalar Value output bitstream
 /// \tparam ValueType Type of the value to write bits to
 template <typename ValueType>
     requires (!std::input_iterator<ValueType>)
-class bitstream<ValueType, Output>
+class obitstream<ValueType>
 {
 public:
     /// Scalar output bitstream
     /// \param value Reference to the value to write bits to
-    explicit bitstream(ValueType &value) noexcept
+    explicit obitstream(ValueType &value) noexcept
         : bytePtr(reinterpret_cast<unsigned char*>(&value))
     {};
 
@@ -282,7 +291,10 @@ public:
         mask >>= 1;
     }
 
-    friend auto& operator<<(bitstream<ValueType, Output> &obitstream, bool value)
+    /// Insert one bit to the stream
+    /// @param obitstream bitstream object
+    /// @param value bit to insert
+    friend auto& operator<<(obitstream<ValueType> &obitstream, bool value)
     {
         obitstream.write(value);
         return obitstream;
@@ -296,11 +308,6 @@ private:
     size_t currentIndex = 0;
 };
 
+/// type deduction guide for OutputIterator bitstream
 template <typename ValueType>
-bitstream(ValueType const&) -> bitstream<ValueType, Output>;
-
-template <typename ValueType>
-using ibitstream = bitstream<ValueType, Input>;
-
-template <typename ValueType>
-using obitstream = bitstream<ValueType, Output>;
+obitstream(ValueType) -> obitstream<ValueType>;
