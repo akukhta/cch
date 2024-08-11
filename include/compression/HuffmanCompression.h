@@ -11,8 +11,8 @@ namespace cch
         class HuffmanCompression
         {
         public:
-            std::vector<unsigned char> compress(std::span<unsigned char> data);
-            std::vector<unsigned char> decompress(std::span<unsigned char> data);
+            std::pair<std::vector<unsigned char>, std::vector<unsigned char>> compress(std::span<unsigned char> data);
+            std::vector<unsigned char> decompress(std::pair<std::span<unsigned char>,std::span<unsigned char>> data);
 
         private:
             /// Calcalate frequency of each byte in a given buffer
@@ -31,8 +31,14 @@ namespace cch
             };
 
             short buildTree(std::vector<TreeNode> &nodes);
+            std::vector<TreeNode> initializeNodes(std::unordered_map<unsigned char, unsigned char> const &frequencyTable);
+
             void generateCodeTable(std::unordered_map<unsigned char, std::string> &codeTable, std::vector<TreeNode> const& nodes, short nodeIdx, std::string code = "");
-            std::vector<std::pair<short, short>> generateCodeRanges(std::unordered_map<unsigned char, unsigned char> const &frequencyTable);
+            std::vector<std::pair<unsigned char, unsigned char>> generateCodeRanges(std::unordered_map<unsigned char, unsigned char> const &frequencyTable);
+            std::vector<unsigned char> serializeTree(std::vector<std::pair<unsigned char, unsigned char>> const &rangesOfUsedBytes, std::unordered_map<unsigned char, unsigned char> const &frequencyTable);
+
+            std::unordered_map<unsigned char, unsigned char> restoreFrequencyTable(std::span<unsigned char> data);
+            std::unordered_map<std::string, unsigned char> inverseCodeTable(std::unordered_map<unsigned char, std::string> codeTable);
         };
     }
 }

@@ -71,6 +71,15 @@ public:
         return ibitstream;
     }
 
+    bool eof() const noexcept
+    {
+        return bytePtr == nullptr && currentIt == last;
+    }
+
+    bool isLastByte() const noexcept
+    {
+        return currentIt  == last;
+    }
 private:
     /// Beginning of the stream
     InputIterator currentIt;
