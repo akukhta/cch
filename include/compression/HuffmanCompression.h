@@ -2,6 +2,7 @@
 #include <vector>
 #include <span>
 #include <unordered_map>
+#include <string>
 
 namespace cch
 {

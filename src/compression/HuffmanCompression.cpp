@@ -21,6 +21,7 @@ std::vector<unsigned char> cch::compression::HuffmanCompression::compress(std::s
     }
 
     // Deallocate memory
+    generateCodeRanges(byteFrequency);
     byteFrequency.clear();
 
     // build tree
@@ -104,6 +105,43 @@ void cch::compression::HuffmanCompression::generateCodeTable(
 std::vector<std::pair<short, short>> cch::compression::HuffmanCompression::generateCodeRanges(
     std::unordered_map<unsigned char, unsigned char> const &frequencyTable)
 {
+    std::vector<std::pair<unsigned char, unsigned char>> usedRanges;
+
+    std::vector<unsigned char> indices;
+
+    for (auto [byte, f] : frequencyTable)
+    {
+        if (f > 0)
+        {
+            indices.push_back(byte);
+        }
+    }
+
+    std::sort(indices.begin(), indices.end(), std::less<unsigned char>());
+
+    for (size_t i = 0; i < indices.size(); ++i)
+    {
+        unsigned char start = indices[i];
+        unsigned char end = start;
+        size_t j = i + 1;
+
+        while (j < indices.size())
+        {
+            if (end + 1 == indices[j])
+            {
+                end = indices[j++];
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        usedRanges.push_back(std::make_pair(start, end));
+
+        i = j;
+    }
+
     return std::vector<std::pair<short, short>>{};
 }
 
