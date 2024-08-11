@@ -31,6 +31,7 @@ namespace cch
 
             short buildTree(std::vector<TreeNode> &nodes);
             void generateCodeTable(std::unordered_map<unsigned char, std::string> &codeTable, std::vector<TreeNode> const& nodes, short nodeIdx, std::string code = "");
+            std::vector<std::pair<short, short>> generateCodeRanges(std::unordered_map<unsigned char, unsigned char> const &frequencyTable);
         };
     }
 }

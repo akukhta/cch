@@ -247,6 +247,83 @@ private:
 template <typename OutputIterator>
 obitstream(OutputIterator first, OutputIterator last) -> obitstream<OutputIterator>;
 
+
+/// output bitstream with internal buffer
+/// \tparam OutputIterator Output Iterators point to the begin and to the end of a stream
+template <>
+class obitstream<std::vector<unsigned char>>
+{
+public:
+    obitstream() noexcept = default;
+
+    /// Write single bit to the stream
+    /// \param value bit to write to the stream true/false (1/0)
+    void write(bool value)
+    {
+        // If the current byte pointer is null, we should read the next value
+        if (bytePtr == nullptr)
+        {
+            buffer.push_back(0x00);
+
+            bytePtr = &buffer.back();
+            // Reset the byte index and mask
+            mask = 0x80;
+            bitsWrittenToCurrentByte = 0;
+        }
+
+        // write bit and shift the mask
+        if (value)
+        {
+            *bytePtr |= mask;
+            ++bitsWrittenToCurrentByte;
+        }
+        else
+        {
+            *bytePtr &= ~mask;
+            ++bitsWrittenToCurrentByte;
+        }
+
+        mask >>= 1;
+
+        if (mask == 0x00)
+        {
+            bytePtr = nullptr;
+        }
+    }
+
+    std::vector<unsigned char>& getBuffer() noexcept
+    {
+        return buffer;
+    }
+
+    std::vector<unsigned char> extractBuffer()
+    {
+        auto rv = std::move(buffer);
+        buffer = std::vector<unsigned char>{};
+
+        return rv;
+    }
+
+    unsigned char getBitsWrittenToCurrentByte() const noexcept
+    {
+        return bitsWrittenToCurrentByte;
+    }
+
+    /// Insert one bit to the stream
+    /// @param obitstream bitstream object
+    /// @param value bit to insert
+    friend auto& operator<<(obitstream<std::vector<unsigned char>> &obitstream, bool value)
+    {
+        obitstream.write(value);
+        return obitstream;
+    }
+private:
+    std::vector<unsigned char> buffer;
+    unsigned char* bytePtr = nullptr;
+    unsigned char mask = 0x80;
+    unsigned char bitsWrittenToCurrentByte = 0;
+};
+
 /// Scalar Value output bitstream
 /// \tparam ValueType Type of the value to write bits to
 template <typename ValueType>

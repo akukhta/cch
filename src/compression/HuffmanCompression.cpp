@@ -1,4 +1,5 @@
 #include "../../include/compression/HuffmanCompression.h"
+#include "../../include/utilities/bitstream.h"
 #include <limits>
 #include <queue>
 #include <iostream>
@@ -32,7 +33,20 @@ std::vector<unsigned char> cch::compression::HuffmanCompression::compress(std::s
         std::cout << std::format("{} : {}", static_cast<char>(byte), code) << std::endl;
     }
 
-    return std::vector<unsigned char>{};
+    obitstream<std::vector<unsigned char>> compressedData;
+
+    for (auto byte : data)
+    {
+        auto code = codeTable[byte];
+
+        for (auto bit : code)
+        {
+            compressedData.write((bit == '1'));
+            std::cout << bit;
+        }
+    }
+
+    return compressedData.extractBuffer();
 }
 
 std::vector<unsigned char> cch::compression::HuffmanCompression::decompress(std::span<unsigned char> data)
@@ -53,7 +67,7 @@ short cch::compression::HuffmanCompression::buildTree(std::vector<TreeNode> &nod
     {
         if (nodes[i].weigth > 0)
         {
-            pq.push(i);
+            pq.push(static_cast<short>(i));
         }
     }
 
@@ -85,6 +99,12 @@ void cch::compression::HuffmanCompression::generateCodeTable(
         generateCodeTable(codeTable, nodes, nodes[nodeIdx].left, code + "0");
         generateCodeTable(codeTable, nodes, nodes[nodeIdx].right, code + "1");
     }
+}
+
+std::vector<std::pair<short, short>> cch::compression::HuffmanCompression::generateCodeRanges(
+    std::unordered_map<unsigned char, unsigned char> const &frequencyTable)
+{
+    return std::vector<std::pair<short, short>>{};
 }
 
 std::unordered_map<unsigned char, unsigned char> cch::compression::HuffmanCompression::calculateCharFrequency
