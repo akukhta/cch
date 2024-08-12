@@ -34,14 +34,14 @@ public:
 
             bytePtr = reinterpret_cast<unsigned char const *>(&(*currentIt));
             ++currentIt;
-
+            currentStreamPos += 1;
             // Reset the byte index and mask
             currentIndex = 0;
             mask = 0x80;
         }
 
         // calculate the return value and shift the mask
-        bool rv = bytePtr[currentIndex] & mask;
+        bool const rv = bytePtr[currentIndex] & mask;
         mask >>= 1;
 
         if (mask == 0x00)
@@ -80,6 +80,11 @@ public:
     {
         return currentIt  == last;
     }
+
+    auto tellg() const noexcept
+    {
+        return currentStreamPos;
+    }
 private:
     /// Beginning of the stream
     InputIterator currentIt;
@@ -90,6 +95,7 @@ private:
     unsigned char const* bytePtr = nullptr;
     /// Current byte index
     size_t currentIndex = 0;
+    std::streampos currentStreamPos = 0;
     unsigned char mask = 0x80;
 };
 
@@ -129,7 +135,7 @@ public:
         }
 
         // Read current bit and shift the mask
-        bool rv = bytePtr[currentIndex] & mask;
+        bool const rv = bytePtr[currentIndex] & mask;
         mask >>= 1;
 
         return rv;
@@ -185,7 +191,7 @@ public:
 
     /// Write single bit to the stream
     /// \param value bit to write to the stream true/false (1/0)
-    void write(bool value)
+    void write(bool const value)
     {
         // If the current byte pointer is null, we should read the next value
         if (bytePtr == nullptr)
@@ -234,7 +240,7 @@ public:
     /// Insert one bit to the stream
     /// @param obitstream bitstream object
     /// @param value bit to insert
-    friend auto& operator<<(obitstream<OutputIterator> &obitstream, bool value)
+    friend auto& operator<<(obitstream<OutputIterator> &obitstream, bool const value)
     {
         obitstream.write(value);
         return obitstream;
@@ -267,7 +273,7 @@ public:
 
     /// Write single bit to the stream
     /// \param value bit to write to the stream true/false (1/0)
-    void write(bool value)
+    void write(bool const value)
     {
         // If the current byte pointer is null, we should read the next value
         if (bytePtr == nullptr)
@@ -321,7 +327,7 @@ public:
     /// Insert one bit to the stream
     /// @param obitstream bitstream object
     /// @param value bit to insert
-    friend auto& operator<<(obitstream<std::vector<unsigned char>> &obitstream, bool value)
+    friend auto& operator<<(obitstream<std::vector<unsigned char>> &obitstream, bool const value)
     {
         obitstream.write(value);
         return obitstream;
@@ -348,7 +354,7 @@ public:
 
     /// Write single bit to the stream
     /// \param value bit to write to the stream true/false (1/0)
-    void write(bool value)
+    void write(bool const value)
     {
         // Check if the entire 8 bits have been written
         if (mask == 0x00)
@@ -380,7 +386,7 @@ public:
     /// Insert one bit to the stream
     /// @param obitstream bitstream object
     /// @param value bit to insert
-    friend auto& operator<<(obitstream<ValueType> &obitstream, bool value)
+    friend auto& operator<<(obitstream<ValueType> &obitstream, bool const value)
     {
         obitstream.write(value);
         return obitstream;

@@ -13,7 +13,7 @@ bool fbitstream::read()
        mask = 0x80;
    }
 
-    bool rv = (currentByte & mask);
+    bool const rv = (currentByte & mask);
     mask >>= 1;
 
     return rv;

@@ -47,7 +47,7 @@ std::vector<unsigned char> cch::compression::RLECompression::decompress(std::spa
     for (size_t i = 0; i < data.size() - 1; i += 2)
     {
         unsigned char byte = data[i];
-        unsigned char count = data[i + 1];
+        unsigned char const count = data[i + 1];
 
         for (unsigned char j = 0; j < count; ++j)
         {
