@@ -38,7 +38,11 @@ namespace cch
             std::vector<unsigned char> serializeBytesFrequencies(std::vector<std::pair<unsigned char, unsigned char>> const &rangesOfUsedBytes, std::unordered_map<unsigned char, unsigned char> const &frequencyTable);
 
             std::unordered_map<unsigned char, unsigned char> restoreFrequencyTable(std::span<unsigned char> data);
-            std::unordered_map<std::string, unsigned char> inverseCodeTable(std::unordered_map<unsigned char, std::string> codeTable);
+            std::unordered_map<size_t, unsigned char> inverseCodeTable(std::unordered_map<unsigned char, std::string> codeTable);
+
+            static size_t djb2hash(std::string const& str);
+            static size_t djb2hash(size_t prevHash, char c);
+            static size_t const inline defaultHashValue = 5381;
         };
     }
 }

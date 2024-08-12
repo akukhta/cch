@@ -27,10 +27,11 @@ std::pair<std::vector<unsigned char>, std::vector<unsigned char>>  cch::compress
 
     // Compress the data
     obitstream<std::vector<unsigned char>> compressedData;
+    compressedData.getBuffer().reserve(data.size());
 
     for (auto byte : data)
     {
-        auto &code = codeTable[byte];
+        auto const &code = codeTable[byte];
 
         for (auto const bit : code)
         {
@@ -39,6 +40,7 @@ std::pair<std::vector<unsigned char>, std::vector<unsigned char>>  cch::compress
     }
 
     serailizedFrequencies[0] = compressedData.getBitsWrittenToCurrentByte();
+    compressedData.getBuffer().shrink_to_fit();
 
     return std::make_pair(std::move(serailizedFrequencies), std::move(compressedData.extractBuffer()));
 }
@@ -47,6 +49,7 @@ std::vector<unsigned char> cch::compression::HuffmanCompression::decompress(
     std::pair<std::span<unsigned char>, std::span<unsigned char>> data)
 {
     std::vector<unsigned char> decompressedData;
+    decompressedData.reserve(data.second.size() * 1.3);
 
     // Restore the frequency table from the compression info
     auto const frequencyTable = restoreFrequencyTable(data.first);
@@ -56,11 +59,12 @@ std::vector<unsigned char> cch::compression::HuffmanCompression::decompress(
     // Build the tree
     auto const rootIdx = buildTree(nodes);
 
-    std::unordered_map<std::string, unsigned char> codeTable;
+    std::unordered_map<size_t, unsigned char> codeTable;
 
     {
         // Generate the code table & inverse it (from byte->code to code->byte)
         std::unordered_map<unsigned char, std::string> ccodeTable;
+        ccodeTable.reserve(256);
         generateCodeTable(ccodeTable, nodes, rootIdx);
         codeTable = inverseCodeTable(std::move(ccodeTable));
     }
@@ -70,17 +74,18 @@ std::vector<unsigned char> cch::compression::HuffmanCompression::decompress(
 
     // Decompress the data
     ibitstream in(data.second.begin(), data.second.end());
-    std::string currentCode;
+    size_t currentHash = defaultHashValue;
 
     while (lastByteBits > 0 && !in.eof())
     {
-        currentCode += in.read() ? "1" : "0";
+        currentHash = djb2hash(currentHash, in.read() ? '1' : '0');
+
         lastByteBits -= in.isLastByte() ? 1 : 0;
 
-        if (auto it = codeTable.find(currentCode); it != codeTable.end())
+        if (auto it = codeTable.find(currentHash); it != codeTable.end())
         {
             decompressedData.push_back(it->second);
-            currentCode = "";
+            currentHash = defaultHashValue;
         }
     }
 
@@ -95,7 +100,7 @@ short cch::compression::HuffmanCompression::buildTree(std::vector<TreeNode> &nod
     };
 
     std::priority_queue<short, std::deque<short>, decltype(comp)> pq{comp};
-
+    
     for (size_t i = 0; i < nodes.size(); ++i)
     {
         if (nodes[i].weigth > 0)
@@ -204,6 +209,8 @@ std::vector<unsigned char> cch::compression::HuffmanCompression::serializeBytesF
     std::unordered_map<unsigned char, unsigned char> const &frequencyTable)
 {
     std::vector<unsigned char> serializedByteFrequency;
+    serializedByteFrequency.reserve(512);
+
     // Reserve the first byte to store the amount of bits used in the last byte of the compressed data
     serializedByteFrequency.push_back(0x00);
 
@@ -218,6 +225,7 @@ std::vector<unsigned char> cch::compression::HuffmanCompression::serializeBytesF
         }
     }
 
+    serializedByteFrequency.shrink_to_fit();
     return serializedByteFrequency;
 }
 
@@ -225,6 +233,7 @@ std::unordered_map<unsigned char, unsigned char> cch::compression::HuffmanCompre
     std::span<unsigned char> const data)
 {
     std::unordered_map<unsigned char, unsigned char> byteFrequency;
+    byteFrequency.reserve(256);
 
     for (size_t i = 1; i < data.size() - 1;)
     {
@@ -242,24 +251,38 @@ std::unordered_map<unsigned char, unsigned char> cch::compression::HuffmanCompre
     return byteFrequency;
 }
 
-std::unordered_map<std::string, unsigned char> cch::compression::HuffmanCompression::inverseCodeTable(
+std::unordered_map<size_t, unsigned char> cch::compression::HuffmanCompression::inverseCodeTable(
     std::unordered_map<unsigned char, std::string> codeTable)
 {
-    std::unordered_map<std::string, unsigned char> inversedTable;
+    std::unordered_map<size_t, unsigned char> inversedTable;
     inversedTable.reserve(codeTable.size());
 
     for (auto &[byte, code] : codeTable)
     {
-        inversedTable[code] = byte;
+        inversedTable[djb2hash(code)] = byte;
     }
 
     return inversedTable;
+}
+
+size_t cch::compression::HuffmanCompression::djb2hash(std::string const& str)
+{
+    size_t hash = defaultHashValue;
+    
+    std::ranges::for_each(str, [&hash](char c) { hash = djb2hash(hash, c); });
+    return hash;
+}
+
+size_t cch::compression::HuffmanCompression::djb2hash(size_t prevHash, char c)
+{
+    return ((prevHash << 5) + prevHash) + c;
 }
 
 std::unordered_map<unsigned char, unsigned char> cch::compression::HuffmanCompression::calculateCharFrequency
     (std::span<unsigned char> const data)
 {
     std::unordered_map<unsigned char, size_t> frequencyTable;
+    frequencyTable.reserve(256);
 
     // Init table
     for (unsigned short i = 0; i <= std::numeric_limits<unsigned char>::max(); ++i)
@@ -288,6 +311,7 @@ std::unordered_map<unsigned char, unsigned char> cch::compression::HuffmanCompre
     max = (max / 255) + 1;
 
     std::unordered_map<unsigned char, unsigned char> frequencyTableCompact;
+    frequencyTableCompact.reserve(256);
 
     for (auto [byte, freq] : frequencyTable)
     {
@@ -297,8 +321,6 @@ std::unordered_map<unsigned char, unsigned char> cch::compression::HuffmanCompre
         {
             frequencyTableCompact[byte] = 1;
         }
-
-        //frequencyTableCompact[byte]  = static_cast<unsigned char>((static_cast<double>(freq) / static_cast<double>(data.size())) * 100);
     }
 
     return frequencyTableCompact;
