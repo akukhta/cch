@@ -79,7 +79,7 @@ std::vector<unsigned char> cch::compression::HuffmanCompression::decompressData(
 
     while (lastByteBits > 0 && !in.eof())
     {
-        currentHash = cch::hashing::djb2::dbj2hash(currentHash, in.read() ? '1' : '0');
+        currentHash = cch::hashing::djb2::djb2hash(currentHash, in.read() ? '1' : '0');
 
         lastByteBits -= in.isLastByte() ? 1 : 0;
 
@@ -260,23 +260,10 @@ std::unordered_map<size_t, unsigned char> cch::compression::HuffmanCompression::
 
     for (auto &[byte, code] : codeTable)
     {
-        inversedTable[djb2hash(code)] = byte;
+        inversedTable[cch::hashing::djb2::djb2hash(code)] = byte;
     }
 
     return inversedTable;
-}
-
-size_t cch::compression::HuffmanCompression::djb2hash(std::string const& str)
-{
-    size_t hash = defaultHashValue;
-    
-    std::ranges::for_each(str, [&hash](char c) { hash = djb2hash(hash, c); });
-    return hash;
-}
-
-size_t cch::compression::HuffmanCompression::djb2hash(size_t prevHash, char c)
-{
-    return ((prevHash << 5) + prevHash) + c;
 }
 
 std::unordered_map<unsigned char, unsigned char> cch::compression::HuffmanCompression::calculateCharFrequency
