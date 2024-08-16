@@ -18,6 +18,7 @@ add_library(cch SHARED
         include/utilities/bitstream.h
         src/compression/HuffmanCompression.cpp
         include/compression/HuffmanCompression.h
+        include/hash/djb2hash.h
 )
 
 

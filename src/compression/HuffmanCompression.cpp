@@ -1,12 +1,13 @@
 #include "../../include/compression/HuffmanCompression.h"
 #include "../../include/utilities/bitstream.h"
+#include "../../include/hash/djb2hash.h"
 #include <limits>
 #include <queue>
 #include <iostream>
 #include <format>
 #include <algorithm>
 
-std::pair<std::vector<unsigned char>, std::vector<unsigned char>>  cch::compression::HuffmanCompression::compress(std::span<unsigned char> const data)
+std::pair<std::vector<unsigned char>, std::vector<unsigned char>>  cch::compression::HuffmanCompression::compressData(std::span<unsigned char> data)
 {
     // Calculate the byte frequency
     auto byteFrequency = calculateCharFrequency(data);
@@ -45,7 +46,7 @@ std::pair<std::vector<unsigned char>, std::vector<unsigned char>>  cch::compress
     return std::make_pair(std::move(serailizedFrequencies), std::move(compressedData.extractBuffer()));
 }
 
-std::vector<unsigned char> cch::compression::HuffmanCompression::decompress(
+std::vector<unsigned char> cch::compression::HuffmanCompression::decompressData(
     std::pair<std::span<unsigned char>, std::span<unsigned char>> data)
 {
     std::vector<unsigned char> decompressedData;
@@ -74,18 +75,18 @@ std::vector<unsigned char> cch::compression::HuffmanCompression::decompress(
 
     // Decompress the data
     ibitstream in(data.second.begin(), data.second.end());
-    size_t currentHash = defaultHashValue;
+    size_t currentHash = cch::hashing::djb2::defaultHashValue;
 
     while (lastByteBits > 0 && !in.eof())
     {
-        currentHash = djb2hash(currentHash, in.read() ? '1' : '0');
+        currentHash = cch::hashing::djb2::dbj2hash(currentHash, in.read() ? '1' : '0');
 
         lastByteBits -= in.isLastByte() ? 1 : 0;
 
         if (auto it = codeTable.find(currentHash); it != codeTable.end())
         {
             decompressedData.push_back(it->second);
-            currentHash = defaultHashValue;
+            currentHash = cch::hashing::djb2::defaultHashValue;
         }
     }
 
@@ -324,4 +325,21 @@ std::unordered_map<unsigned char, unsigned char> cch::compression::HuffmanCompre
     }
 
     return frequencyTableCompact;
+}
+
+int t(int x)
+{
+    return x * x;
+}
+
+std::future<std::pair<std::vector<unsigned char>, std::vector<unsigned char>>>
+cch::compression::HuffmanCompression::compress(std::span<unsigned char> data, std::launch launchPolicy)
+{
+    return std::async(launchPolicy, &cch::compression::HuffmanCompression::compressData, this, data);
+}
+
+std::future<std::vector<unsigned char>>
+cch::compression::HuffmanCompression::decompress(std::pair<std::span<unsigned char>, std::span<unsigned char>> data, std::launch launchPolicy)
+{
+    return std::async(launchPolicy, &cch::compression::HuffmanCompression::decompressData, this, data);
 }
