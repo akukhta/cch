@@ -2,6 +2,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <cassert>
+#include <vector>
 
 template <typename>
 class ibitstream;
@@ -38,20 +39,23 @@ public:
             // Reset the byte index and mask
             currentIndex = 0;
             mask = 0x80;
+            bitsReadFromLastByte = 0;
         }
 
         // calculate the return value and shift the mask
         bool const rv = bytePtr[currentIndex] & mask;
         mask >>= 1;
+        ++bitsReadFromLastByte;
 
         if (mask == 0x00)
         {
-        // The entire byte has been read, move to the next byte or set it to null
+        // The last byte of the current element has been read, move to the next element or set byte ptr to null
         // to read the next value from the iterator
             if (currentIndex + 1 < sizeof(typename std::iterator_traits<InputIterator>::value_type))
             {
                 ++currentIndex;
                 mask = 0x80;
+                bitsReadFromLastByte = 0;
             }
             else
             {
@@ -62,6 +66,38 @@ public:
         return rv;
     }
 
+    template <typename T>
+    void readBits(T &value, size_t count = sizeof(T))
+    {
+        //value = {0};
+        unsigned char* bytePtr = reinterpret_cast<unsigned char*>(&value);
+        size_t currentIndex = 0;
+        unsigned char mask = 0x80;
+
+        for (size_t i = 0; i < count; ++i)
+        {
+            if (read())
+            {
+                bytePtr[currentIndex] |= mask;
+            }
+            else
+            {
+                bytePtr[currentIndex] &= ~mask;
+            }
+
+            mask >>= 1;
+
+            if (mask == 0x00)
+            {
+                if (++currentIndex >= sizeof(value))
+                {
+                    return;
+                }
+
+                mask = 0x80;
+            }
+        }
+    }
     /// Extract one bit from the stream
     /// @param ibitstream bitstream object
     /// @param value return value
@@ -85,6 +121,12 @@ public:
     {
         return currentStreamPos;
     }
+
+    unsigned char getBitsReadFromCurrentByte()
+    {
+        return bitsReadFromLastByte;
+    }
+
 private:
     /// Beginning of the stream
     InputIterator currentIt;
@@ -97,6 +139,7 @@ private:
     size_t currentIndex = 0;
     std::streampos currentStreamPos = 0;
     unsigned char mask = 0x80;
+    unsigned char bitsReadFromLastByte = 0;
 };
 
 /// type deduction guide for InputIterator input bitstream
@@ -271,9 +314,36 @@ class obitstream<std::vector<unsigned char>>
 public:
     obitstream() noexcept = default;
 
+    template <typename T>
+        requires std::is_trivial_v<T>
+    void write(T value, size_t count = sizeof(T) * 8)
+    {
+        unsigned char const * bytePtr = reinterpret_cast<unsigned char const*>(&value);
+        size_t currentIndex = 0;
+        unsigned char mask = 0x80;
+
+        for (size_t i = 0; i < count; ++i)
+        {
+            write(static_cast<bool>(bytePtr[currentIndex] & mask));
+            mask >>= 1;
+
+            if (mask == 0x00)
+            {
+                if (currentIndex + 1 >= sizeof(value))
+                {
+                    return;
+                }
+
+                ++currentIndex;
+                mask = 0x80;
+            }
+        }
+    }
+
     /// Write single bit to the stream
     /// \param value bit to write to the stream true/false (1/0)
-    void write(bool const value)
+    template <>
+    void write(bool const value, size_t count)
     {
         // If the current byte pointer is null, we should read the next value
         if (bytePtr == nullptr)

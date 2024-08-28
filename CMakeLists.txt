@@ -21,6 +21,8 @@ add_library(cch SHARED
         include/hash/djb2hash.h
         include/compression/ArithmeticCompression.h
         src/compression/ArithmeticCompression.cpp
+        include/compression/LZSS.h
+        src/compression/LZSS.cpp
 )
 
 

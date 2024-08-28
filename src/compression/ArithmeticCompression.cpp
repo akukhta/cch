@@ -1,5 +1,7 @@
 #include "compression/ArithmeticCompression.h"
+#include <algorithm>
 
+/// Implemented
 std::array<unsigned long, 256> cch::compression::ArithmeticCompression::countBytes(std::span<unsigned char> data)
 {
     std::array<unsigned long, 256> counted;
@@ -17,6 +19,7 @@ std::array<unsigned long, 256> cch::compression::ArithmeticCompression::countByt
     return counted;
 }
 
+/// Implemented
 std::array<unsigned char, 256> cch::compression::ArithmeticCompression::scaleCounts(const std::array<unsigned long, 256> &counts)
 {
     std::array<unsigned char, 256> scaled;
@@ -61,18 +64,48 @@ std::array<unsigned char, 256> cch::compression::ArithmeticCompression::scaleCou
     return scaled;
 }
 
+/// Implemented
 void cch::compression::ArithmeticCompression::buildTotals(const std::array<unsigned char, 256> &scaled)
 {
     totals[0] = 0;
 
-    for (size_t i = 1; i < scaled.size(); ++i)
+    for (size_t i = 0; i < END_OF_STREAM; ++i)
     {
-        totals[i] = totals[i - 1] + scaled[i - 1];
+        totals[i + 1] = totals[i] + scaled[i];
     }
 
-    totals[256] = totals[255] + 1;
+    totals[END_OF_STREAM + 1] = totals[END_OF_STREAM] + 1;
 }
 
+std::vector<unsigned char> cch::compression::ArithmeticCompression::compress(std::span<unsigned char> data)
+{
+    buildModel(data);
+    initializeArithmeticEncoder();
+
+    for (size_t i = 0; i < data.size() / sizeof(int) + (data.size() % sizeof(int) == 0 ? 0 : 1); ++i)
+    {
+        int num = *reinterpret_cast<int*>(data.data() + i * sizeof(int));
+        auto sym = intToSymbol(num);
+        encodeSymbol(sym);
+    }
+
+    auto eof = intToSymbol(END_OF_STREAM);
+    encodeSymbol(eof);
+    flushEncoder();
+
+    out.write(0, 16);
+    //out.write()
+}
+
+/// Implemented
+void cch::compression::ArithmeticCompression::buildModel(std::span<unsigned char> data)
+{
+    auto counts = countBytes(data);
+    auto scaled = scaleCounts(counts);
+    buildTotals(scaled);
+}
+
+/// Implemented
 void cch::compression::ArithmeticCompression::initializeArithmeticEncoder()
 {
     low = 0;
@@ -80,27 +113,41 @@ void cch::compression::ArithmeticCompression::initializeArithmeticEncoder()
     underflowBits = 0;
 }
 
+/// Implemented
+void cch::compression::ArithmeticCompression::flushEncoder()
+{
+    out.write(low & 0x4000);
+    ++underflowBits;
+
+    while (underflowBits-- > 0)
+    {
+        out.write(~low & 0x4000);
+    }
+}
+
+/// Implemented
 cch::compression::ArithmeticCompression::Symbol cch::compression::ArithmeticCompression::intToSymbol(int num)
 {
     Symbol s;
 
-    s.scale = totals[256];
+    s.scale = totals[END_OF_STREAM + 1];
     s.low_count = totals[num];
     s.high_count = totals[num + 1];
 
     return s;
 }
 
+/// Implemented
 void cch::compression::ArithmeticCompression::getSymbolScale(cch::compression::ArithmeticCompression::Symbol &s)
 {
-    s.scale = totals[256];
+    s.scale = totals[END_OF_STREAM + 1];
 }
 
 int cch::compression::ArithmeticCompression::symbolToInt(int count, cch::compression::ArithmeticCompression::Symbol &s)
 {
     int c = 0;
 
-    for (c = 256; count < totals[c]; --c);
+    for (c = END_OF_STREAM; count < totals[c]; --c);
 
     s.high_count = totals[c + 1];
     s.low_count = totals[c];
@@ -108,10 +155,9 @@ int cch::compression::ArithmeticCompression::symbolToInt(int count, cch::compres
     return c;
 }
 
-unsigned char cch::compression::ArithmeticCompression::encodeSymbol(const cch::compression::ArithmeticCompression::Symbol &s)
+/// Implemented
+void cch::compression::ArithmeticCompression::encodeSymbol(const cch::compression::ArithmeticCompression::Symbol &s)
 {
-    unsigned char res = 0x00;
-
     long range = static_cast<long>(high - low) + 1;
 
     high = low + static_cast<unsigned short>((range * s.high_count) / (s.scale - 1));
@@ -121,11 +167,11 @@ unsigned char cch::compression::ArithmeticCompression::encodeSymbol(const cch::c
     {
         if ((high & 0x8000) == (low & 0x8000))
         {
-            res = high & 0x8000;
+            out.write(high & 0x8000);
 
             while (underflowBits > 0)
             {
-                res |= (~high & 0x8000);
+                out.write(~high & 0x8000);
                 --underflowBits;
             }
         }
@@ -135,7 +181,14 @@ unsigned char cch::compression::ArithmeticCompression::encodeSymbol(const cch::c
             low &= 0x3fff;
             high |= 0x4000;
         }
+        else
+        {
+            return;
+        }
+
+        low <<= 1;
+        high <<= 1;
+        high |= 1;
     }
-    return 0;
 }
 
