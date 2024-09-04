@@ -2,6 +2,7 @@
 #include <span>
 #include <array>
 #include <vector>
+#include "../config/types.h"
 #include "../utilities/bitstream.h"
 
 namespace cch::compression
@@ -9,7 +10,7 @@ namespace cch::compression
     class ArithmeticCompression
     {
     public:
-        std::vector<unsigned char> compress(std::span<unsigned char> data);
+        std::vector<unsigned char> compress(std::span<cch::byte> data);
 
     private:
         struct Symbol
@@ -24,12 +25,12 @@ namespace cch::compression
         unsigned short high;
         long underflowBits;
 
-        void buildModel(std::span<unsigned char> data);
+        void buildModel(std::span<cch::byte> data);
         void initializeArithmeticEncoder();
         void flushEncoder();
-        std::array<unsigned long, 256> countBytes(std::span<unsigned char> data);
-        std::array<unsigned char, 256> scaleCounts(std::array<unsigned long, 256> const& counts);
-        void buildTotals(std::array<unsigned char, 256> const& scaled);
+        std::array<unsigned long, 256> countBytes(std::span<cch::byte> data);
+        std::array<cch::byte, 256> scaleCounts(std::array<unsigned long, 256> const& counts);
+        void buildTotals(std::array<cch::byte, 256> const& scaled);
         Symbol intToSymbol(int num);
         void getSymbolScale(Symbol &s);
         int symbolToInt(int count, Symbol &s);

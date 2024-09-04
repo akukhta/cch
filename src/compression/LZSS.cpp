@@ -1,7 +1,7 @@
 #include "../include/compression/LZSS.h"
 #include "../include/utilities/bitstream.h"
 
-std::vector<unsigned char> cch::compression::LZSS::compress(std::span<unsigned char> data)
+std::vector<cch::byte> cch::compression::LZSS::compress(std::span<cch::byte> data)
 {
     // Encode data to vector of encoded elements
 
@@ -56,9 +56,9 @@ std::vector<unsigned char> cch::compression::LZSS::compress(std::span<unsigned c
     return encodedElementsToRaw(encodedElements);
 }
 
-std::vector<unsigned char> cch::compression::LZSS::decompress(std::span<unsigned char> compressedData)
+std::vector<cch::byte> cch::compression::LZSS::decompress(std::span<cch::byte> compressedData)
 {
-    std::vector<unsigned char> decoded;
+    std::vector<cch::byte> decoded;
     auto encodedElements = rawToEncodedElements(compressedData);
 
     for (const auto &element : encodedElements)
@@ -82,11 +82,11 @@ std::vector<unsigned char> cch::compression::LZSS::decompress(std::span<unsigned
     return decoded;
 }
 
-std::vector<unsigned char> cch::compression::LZSS::encodedElementsToRaw(std::vector<EncodedElement> const &encoded)
+std::vector<cch::byte> cch::compression::LZSS::encodedElementsToRaw(std::vector<EncodedElement> const &encoded)
 {
     // 0 - sequence
     // 1 - literal
-    obitstream<std::vector<unsigned char>> data;
+    obitstream<std::vector<cch::byte>> data;
     data.write(0, 8);
 
     for (auto &element : encoded)
@@ -111,7 +111,7 @@ std::vector<unsigned char> cch::compression::LZSS::encodedElementsToRaw(std::vec
 }
 
 std::vector<cch::compression::LZSS::EncodedElement> cch::compression::LZSS::rawToEncodedElements(
-    std::span<unsigned char> data)
+    std::span<cch::byte> data)
 {
     std::vector<EncodedElement> encodedElements;
     ibitstream in(data.begin(), data.end());

@@ -2,14 +2,15 @@
 #include <array>
 #include <span>
 #include <vector>
+#include "../config/types.h"
 
 namespace cch::compression
 {
     class LZSS
     {
     public:
-        std::vector<unsigned char> compress(std::span<unsigned char> data);
-        std::vector<unsigned char> decompress(std::span<unsigned char> compressedData);
+        std::vector<cch::byte> compress(std::span<cch::byte> data);
+        std::vector<cch::byte> decompress(std::span<cch::byte> compressedData);
 
     private:
         struct EncodedElement
@@ -18,7 +19,7 @@ namespace cch::compression
 
             union
             {
-                unsigned char byte;
+                cch::byte byte;
 
                 union
                 {
@@ -33,8 +34,8 @@ namespace cch::compression
             };
         };
 
-        std::vector<unsigned char> encodedElementsToRaw(std::vector<EncodedElement> const &encoded);
-        std::vector<EncodedElement> rawToEncodedElements(std::span<unsigned char> data);
+        std::vector<cch::byte> encodedElementsToRaw(std::vector<EncodedElement> const &encoded);
+        std::vector<EncodedElement> rawToEncodedElements(std::span<cch::byte> data);
 
         static size_t const inline WINDOW_SIZE = 4096;   // Size of the search buffer (also known as the sliding window)
         static size_t const inline LOOK_AHEAD_BUFFER_SIZE = 18;  // Size of the look-ahead buffer

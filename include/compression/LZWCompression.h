@@ -3,6 +3,7 @@
 #include <deque>
 #include <span>
 #include <unordered_map>
+#include "../config/types.h"
 
 namespace cch
 {
@@ -10,13 +11,13 @@ namespace cch
     {
         struct ByteDequeHash
         {
-            size_t operator()(std::deque<unsigned char> const& vec)  const
+            size_t operator()(std::deque<cch::byte> const& vec)  const
             {
                 auto hash = vec.size();
 
                 for (auto x : vec)
                 {
-                    hash ^= std::hash<unsigned char>()(x) + magicNumber + (hash << 6) + (hash >> 2);
+                    hash ^= std::hash<cch::byte>()(x) + magicNumber + (hash << 6) + (hash >> 2);
                 }
 
                 return hash;
@@ -37,8 +38,8 @@ namespace cch
         {
         public:
             LZWCompression() noexcept;
-            std::vector<std::uint32_t> compress(std::span<unsigned char> data);
-            std::vector<unsigned char> decompress(std::span<std::uint32_t> data);
+            std::vector<std::uint32_t> compress(std::span<cch::byte> data);
+            std::vector<cch::byte> decompress(std::span<std::uint32_t> data);
             void resetState() noexcept;
 
         private:
@@ -46,9 +47,9 @@ namespace cch
             void initDecompressionDictionary() noexcept;
 
             std::unordered_map<std::uint32_t, unsigned int, NoHash> dictionary;
-            std::unordered_map<unsigned int, std::deque<unsigned char>> decompressionDictionary;
+            std::unordered_map<unsigned int, std::deque<cch::byte>> decompressionDictionary;
 
-            void calculateHashForElement(unsigned char newElement, int index);
+            void calculateHashForElement(cch::byte newElement, int index);
             static std::uint32_t const inline magicNumber = 0x9e3779b9;
             size_t currentHash = 0;
             size_t prevHash = 0;

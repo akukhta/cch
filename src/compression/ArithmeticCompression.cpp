@@ -2,7 +2,7 @@
 #include <algorithm>
 
 /// Implemented
-std::array<unsigned long, 256> cch::compression::ArithmeticCompression::countBytes(std::span<unsigned char> data)
+std::array<unsigned long, 256> cch::compression::ArithmeticCompression::countBytes(std::span<cch::byte> data)
 {
     std::array<unsigned long, 256> counted;
 
@@ -20,9 +20,9 @@ std::array<unsigned long, 256> cch::compression::ArithmeticCompression::countByt
 }
 
 /// Implemented
-std::array<unsigned char, 256> cch::compression::ArithmeticCompression::scaleCounts(const std::array<unsigned long, 256> &counts)
+std::array<cch::byte, 256> cch::compression::ArithmeticCompression::scaleCounts(const std::array<unsigned long, 256> &counts)
 {
-    std::array<unsigned char, 256> scaled;
+    std::array<cch::byte, 256> scaled;
 
     unsigned long maxCount = *std::max(counts.begin(), counts.end());
     unsigned int total = 1;
@@ -30,7 +30,7 @@ std::array<unsigned char, 256> cch::compression::ArithmeticCompression::scaleCou
 
     for (size_t i = 0; i < counts.size(); ++i)
     {
-        scaled[i] = static_cast<unsigned char>(counts[i] / scale);
+        scaled[i] = static_cast<cch::byte>(counts[i] / scale);
 
         if (scaled[i] == 0 && counts[i] != 0)
         {
@@ -65,7 +65,7 @@ std::array<unsigned char, 256> cch::compression::ArithmeticCompression::scaleCou
 }
 
 /// Implemented
-void cch::compression::ArithmeticCompression::buildTotals(const std::array<unsigned char, 256> &scaled)
+void cch::compression::ArithmeticCompression::buildTotals(const std::array<cch::byte, 256> &scaled)
 {
     totals[0] = 0;
 
@@ -77,7 +77,7 @@ void cch::compression::ArithmeticCompression::buildTotals(const std::array<unsig
     totals[END_OF_STREAM + 1] = totals[END_OF_STREAM] + 1;
 }
 
-std::vector<unsigned char> cch::compression::ArithmeticCompression::compress(std::span<unsigned char> data)
+std::vector<cch::byte> cch::compression::ArithmeticCompression::compress(std::span<cch::byte> data)
 {
     buildModel(data);
     initializeArithmeticEncoder();
@@ -98,7 +98,7 @@ std::vector<unsigned char> cch::compression::ArithmeticCompression::compress(std
 }
 
 /// Implemented
-void cch::compression::ArithmeticCompression::buildModel(std::span<unsigned char> data)
+void cch::compression::ArithmeticCompression::buildModel(std::span<cch::byte> data)
 {
     auto counts = countBytes(data);
     auto scaled = scaleCounts(counts);

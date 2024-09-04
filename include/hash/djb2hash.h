@@ -2,7 +2,7 @@
 #include <string>
 #include <algorithm>
 
-namespace cch::hashing
+namespace cch::hash
 {
     /// Hash algorithm for strings
     struct djb2
@@ -26,7 +26,7 @@ namespace cch::hashing
         {
             size_t hash = defaultHashValue;
 
-            std::ranges::for_each(str, [&hash](char c) { hash = cch::hashing::djb2::djb2hash(hash, c); });
+            std::ranges::for_each(str, [&hash](char c) { hash = cch::hash::djb2::djb2hash(hash, c); });
             return hash;
         }
 

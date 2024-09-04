@@ -23,6 +23,9 @@ add_library(cch SHARED
         src/compression/ArithmeticCompression.cpp
         include/compression/LZSS.h
         src/compression/LZSS.cpp
+        include/hash/MD5.h
+        src/hash/MD5.cpp
+        include/config/types.h
 )
 
 
