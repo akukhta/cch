@@ -26,6 +26,8 @@ add_library(cch SHARED
         include/hash/MD5.h
         src/hash/MD5.cpp
         include/config/types.h
+        include/hash/SHA256.h
+        src/hash/SHA256.cpp
 )
 
 
