@@ -28,6 +28,8 @@ add_library(cch SHARED
         include/config/types.h
         include/hash/SHA256.h
         src/hash/SHA256.cpp
+        include/hash/SHA512.h
+        src/hash/SHA512.cpp
 )
 
 
