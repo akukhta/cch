@@ -3,7 +3,7 @@
 #include <sstream>
 #include <iomanip>
 #include <vector>
-#include <__bit/endian.h>
+#include <bit>
 
 #include "config/types.h"
 

@@ -95,6 +95,7 @@ std::vector<cch::byte> cch::compression::ArithmeticCompression::compress(std::sp
 
     out.write(0, 16);
     //out.write()
+    return {};
 }
 
 /// Implemented
