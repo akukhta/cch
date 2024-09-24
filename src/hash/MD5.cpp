@@ -46,7 +46,7 @@ std::uint_fast32_t MD5::combine(std::uint_fast32_t A, std::uint_fast32_t B, std:
 	return res;
 }
 
-MD5Hash MD5::hash(std::vector<cch::byte> data)
+MD5Hash MD5::hash(std::span<cch::byte> data)
 {
 	MD5Hash hashState;
 	hash(data, hashState, data.size());
@@ -54,19 +54,7 @@ MD5Hash MD5::hash(std::vector<cch::byte> data)
 	return hashState;
 }
 
-MD5Hash MD5::hashChunk(std::vector<cch::byte> data)
-{
-	hash(data, currentHashState, inputDataSize);
-
-	return currentHashState;
-}
-
-MD5Hash const & MD5::getHash() const
-{
-	return currentHashState;
-}
-
-void MD5::hash(std::vector<cch::byte> data, MD5Hash &hashState, std::uint64_t inputDataSize)
+void MD5::hash(std::span<cch::byte> data, MD5Hash &hashState, std::uint64_t inputDataSize)
 {
 	for (size_t i = 0; i < (data.size() * CHAR_BIT) / 512; ++i)
 	{

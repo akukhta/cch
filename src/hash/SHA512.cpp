@@ -22,7 +22,7 @@ std::array<std::uint_fast64_t, 80> cch::hash::SHA512::K =
             0x431d67c49c100d4c, 0x4cc5d4becb3e42b6, 0x597f299cfc657e2a, 0x5fcb6fab3ad6faec, 0x6c44198c4a475817
     };
 
-cch::hash::SHA512Hash cch::hash::SHA512::hash(std::vector<cch::byte> data)
+cch::hash::SHA512Hash cch::hash::SHA512::hash(std::span<cch::byte> data)
 {
     SHA512Hash hashState;
     hash(data, hashState, data.size());
@@ -30,14 +30,7 @@ cch::hash::SHA512Hash cch::hash::SHA512::hash(std::vector<cch::byte> data)
     return hashState;
 }
 
-cch::hash::SHA512Hash cch::hash::SHA512::hashChunk(std::vector<cch::byte> data)
-{
-    hash(data, currentHashState, inputDataSize);
-
-    return currentHashState;
-}
-
-void cch::hash::SHA512::hash(std::vector<cch::byte> data, SHA512Hash &hash, std::uint64_t inputDataSize)
+void cch::hash::SHA512::hash(std::span<cch::byte> data, SHA512Hash &hash, std::uint64_t inputDataSize)
 {
     for (size_t i = 0; i < (data.size() * CHAR_BIT) / 1024; ++i)
     {

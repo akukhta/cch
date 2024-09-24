@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <vector>
 #include <bit>
+#include <array>
 
 #include "config/types.h"
 
@@ -72,33 +73,17 @@ namespace cch::hash
 
             return *this;
         }
-
-        // explicit SHA256Hash(size_t inputDataSize = 0) : A(A0), B(B0), C(C0), D(D0) {}
-        //
-        // SHA256Hash(std::uint_fast32_t A, uint_fast32_t B, uint_fast32_t C, uint_fast32_t D) :
-        //     A(A), B(B), C(C), D(D) {}
-        //
-        // static std::uint_fast32_t const inline A0 = 0x67452301;
-        // static std::uint_fast32_t const inline B0 = 0xefcdab89;
-        // static std::uint_fast32_t const inline C0 = 0x98badcfe;
-        // static std::uint_fast32_t const inline D0 = 0x10325476;
     };
 
     class SHA512
     {
     public:
-        static SHA512Hash hash(std::vector<cch::byte> data);
-        explicit SHA512(size_t inputDataSize) : inputDataSize(inputDataSize) {}
+        static SHA512Hash hash(std::span<cch::byte> data);
 
-        SHA512Hash hashChunk(std::vector<cch::byte> data);
     private:
-        static void hash(std::vector<cch::byte> data, SHA512Hash &hash, std::uint64_t inputDataSize);
+        static void hash(std::span<cch::byte> data, SHA512Hash &hash, std::uint64_t inputDataSize);
         static void hashChunk(std::span<cch::byte> data, size_t chunkIdx, SHA512Hash& hashState);
         static SHA512Hash calculateHash(std::span<std::uint_fast64_t> data, SHA512Hash &hashState);
-
         static std::array<std::uint_fast64_t, 80> K;
-
-        SHA512Hash currentHashState;
-        size_t inputDataSize = 0;
     };
 }

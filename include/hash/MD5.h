@@ -65,18 +65,7 @@ namespace cch::hash
 	class MD5
 	{
 	public:
-
-		static MD5Hash hash(std::vector<cch::byte> data);
-
-		/// Non-static version to calculate the hash of the passed buffer
-		/// Stores intermediate hash in object's data member
-		/// @param data buffer to hash with the calculations from previous hash round
-		/// @return MD5 hash for the current buffer
-		MD5Hash hashChunk(std::vector<cch::byte> data);
-
-		MD5Hash const& getHash() const;
-
-		explicit MD5(size_t inputDataSize = 0) : inputDataSize(inputDataSize) {}
+		static MD5Hash hash(std::span<cch::byte> data);
 
 	private:
 
@@ -108,7 +97,7 @@ namespace cch::hash
 			return table;
 		}
 
-		static void hash(std::vector<cch::byte> data, MD5Hash &hashState, std::uint64_t inputDataSize);
+		static void hash(std::span<cch::byte> data, MD5Hash &hashState, std::uint64_t inputDataSize);
 
 		static std::array<unsigned char, 64> const constinit indexTable;
 
@@ -122,9 +111,5 @@ namespace cch::hash
 		static void _hashChunk(std::span<cch::byte> data, size_t chunkIdx, MD5Hash& hashState);
 
 		static std::uint_fast32_t f(std::uint_fast32_t B, std::uint_fast32_t C, std::uint_fast32_t D, unsigned char i);
-
-		// Non static methods & data members
-		MD5Hash currentHashState;
-		size_t inputDataSize = 0;
 	};
 }
